@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { resetToDefaultCourses } from '../data/CoursesData'
 
 // Available images for selection - Using absolute paths for Vercel deployment
 const availableCardImages = [
@@ -402,9 +403,26 @@ export default function Admin() {
         }
     };
 
+    const handleResetCourses = () => {
+        const confirmed = window.confirm('Reset semua course ke default dengan image paths yang benar?');
+        if (confirmed) {
+            resetToDefaultCourses();
+            loadCourses(); // Reload courses
+            alert('✅ Courses berhasil direset!');
+        }
+    };
+
     const renderDashboard = () => (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Dashboard</h2>
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Dashboard</h2>
+                <button
+                    onClick={handleResetCourses}
+                    className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm"
+                >
+                    Reset Default Courses
+                </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-blue-50 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold text-blue-800">Total Users</h3>

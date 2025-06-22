@@ -141,6 +141,9 @@ const getAllCoursesData = () => {
     }
 
     try {
+        // Check and update image paths if needed
+        checkAndUpdateImagePaths();
+        
         // Get courses from localStorage
         const storedCourses = JSON.parse(localStorage.getItem('courses') || '[]');
         
@@ -149,7 +152,18 @@ const getAllCoursesData = () => {
             localStorage.setItem('courses', JSON.stringify(defaultCoursesData));
             coursesCache = defaultCoursesData;
         } else {
-            coursesCache = storedCourses;
+            // Validate image paths - if old paths detected, reset
+            const hasOldPaths = storedCourses.some(course => 
+                course.courseImage && course.courseImage.includes('../assets/')
+            );
+            
+            if (hasOldPaths) {
+                console.log('🔄 Detected old image paths, resetting to new paths...');
+                localStorage.setItem('courses', JSON.stringify(defaultCoursesData));
+                coursesCache = defaultCoursesData;
+            } else {
+                coursesCache = storedCourses;
+            }
         }
         
         cacheTimestamp = now;
@@ -160,6 +174,33 @@ const getAllCoursesData = () => {
         cacheTimestamp = now;
         return defaultCoursesData;
     }
+};
+
+// Function to reset courses with new image paths
+export const resetToDefaultCourses = () => {
+    // Force update localStorage with new image paths
+    localStorage.setItem('courses', JSON.stringify(defaultCoursesData));
+    
+    // Clear cache
+    clearCache();
+    
+    console.log('✅ Default courses reset with new image paths!');
+    return defaultCoursesData;
+};
+
+// Auto-reset function dengan version check
+export const checkAndUpdateImagePaths = () => {
+    const CURRENT_VERSION = '2.0'; // Update version number
+    const storedVersion = localStorage.getItem('coursesVersion');
+    
+    if (storedVersion !== CURRENT_VERSION) {
+        console.log('🔄 Updating courses to new image paths...');
+        resetToDefaultCourses();
+        localStorage.setItem('coursesVersion', CURRENT_VERSION);
+        return true; // Indicate that reset occurred
+    }
+    
+    return false; // No reset needed
 };
 
 // Clear cache when courses are updated
