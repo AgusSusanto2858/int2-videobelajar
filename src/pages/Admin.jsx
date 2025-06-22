@@ -1,0 +1,1088 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// Mock data untuk gambar cards dan tutors
+const CARD_IMAGES = [
+    '/src/assets/cards/card1.png',
+    '/src/assets/cards/card2.png',
+    '/src/assets/cards/card3.png',
+    '/src/assets/cards/card4.png',
+    '/src/assets/cards/card5.png',
+    '/src/assets/cards/card6.png',
+    '/src/assets/cards/card7.png',
+    '/src/assets/cards/card8.png',
+    '/src/assets/cards/card9.png'
+];
+
+const TUTOR_IMAGES = [
+    '/src/assets/tutors/tutor-card1.png',
+    '/src/assets/tutors/tutor-card2.png',
+    '/src/assets/tutors/tutor-card3.png',
+    '/src/assets/tutors/tutor-card4.png',
+    '/src/assets/tutors/tutor-card5.png',
+    '/src/assets/tutors/tutor-card6.png',
+    '/src/assets/tutors/tutor-card7.png',
+    '/src/assets/tutors/tutor-card8.png',
+    '/src/assets/tutors/tutor-card9.png'
+];
+
+const CATEGORIES = ['Pemasaran', 'Desain', 'Pengembangan Diri', 'Bisnis'];
+
+export default function AdminDashboard() {
+    const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [users, setUsers] = useState([]);
+    const [courses, setCourses] = useState([]);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+    const [showEditCourseModal, setShowEditCourseModal] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+    const [editingCourse, setEditingCourse] = useState(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+    // Form untuk menambah course baru
+    const [newCourse, setNewCourse] = useState({
+        title: '',
+        description: '',
+        category: '',
+        price: '',
+        courseImage: '',
+        tutorName: '',
+        tutorImage: '',
+        position: '',
+        company: '',
+        rating: 4.5,
+        reviewCount: 0
+    });
+
+    // Form untuk edit course
+    const [editCourse, setEditCourse] = useState({
+        id: '',
+        title: '',
+        description: '',
+        category: '',
+        price: '',
+        courseImage: '',
+        tutorName: '',
+        tutorImage: '',
+        position: '',
+        company: '',
+        rating: 4.5,
+        reviewCount: 0
+    });
+
+    // Load initial data
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = () => {
+        // Load users dari localStorage
+        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        setUsers(registeredUsers);
+
+        // Load courses dari localStorage atau gunakan data default
+        const existingCourses = JSON.parse(localStorage.getItem('courses') || '[]');
+        
+        // Jika belum ada courses, gunakan data default
+        if (existingCourses.length === 0) {
+            const defaultCourses = [
+                {
+                    id: 1,
+                    courseImage: CARD_IMAGES[0],
+                    title: "Big 4 Auditor Financial Analyst",
+                    description: "Mulai transformasi dengan instruktur profesional, harga yang terjangkau, dan sistem pembelajaran yang mudah dipahami.",
+                    tutorImage: TUTOR_IMAGES[0],
+                    tutorName: "Jenna Ortega",
+                    position: "Senior Accountant",
+                    company: "Gojek",
+                    rating: 4.5,
+                    reviewCount: 126,
+                    price: "300K",
+                    category: "Bisnis"
+                }
+            ];
+            setCourses(defaultCourses);
+            localStorage.setItem('courses', JSON.stringify(defaultCourses));
+        } else {
+            setCourses(existingCourses);
+        }
+    };
+
+    // User Management Functions
+    const handleDeleteUser = (userId) => {
+        setDeleteTarget({ type: 'user', id: userId });
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = () => {
+        if (deleteTarget.type === 'user') {
+            const updatedUsers = users.filter(user => user.id !== deleteTarget.id);
+            setUsers(updatedUsers);
+            localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+        } else if (deleteTarget.type === 'course') {
+            const updatedCourses = courses.filter(course => course.id !== deleteTarget.id);
+            setCourses(updatedCourses);
+            localStorage.setItem('courses', JSON.stringify(updatedCourses));
+        }
+        
+        setShowDeleteModal(false);
+        setDeleteTarget(null);
+    };
+
+    const handleResetPassword = (userId) => {
+        setEditingUser(userId);
+        setNewPassword('');
+    };
+
+    const confirmResetPassword = () => {
+        if (newPassword.length < 6) {
+            alert('Password minimal 6 karakter');
+            return;
+        }
+
+        const updatedUsers = users.map(user => 
+            user.id === editingUser 
+                ? { ...user, password: newPassword }
+                : user
+        );
+        
+        setUsers(updatedUsers);
+        localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+        setEditingUser(null);
+        setNewPassword('');
+        alert('Password berhasil direset');
+    };
+
+    // Course Management Functions
+    const handleAddCourse = () => {
+        if (!newCourse.title || !newCourse.description || !newCourse.category || !newCourse.price) {
+            alert('Mohon lengkapi semua field yang wajib');
+            return;
+        }
+
+        const course = {
+            id: Date.now(),
+            ...newCourse,
+            price: newCourse.price + 'K',
+            reviewCount: parseInt(newCourse.reviewCount) || 0,
+            rating: parseFloat(newCourse.rating) || 4.5
+        };
+
+        const updatedCourses = [...courses, course];
+        setCourses(updatedCourses);
+        localStorage.setItem('courses', JSON.stringify(updatedCourses));
+
+        // Reset form
+        setNewCourse({
+            title: '',
+            description: '',
+            category: '',
+            price: '',
+            courseImage: '',
+            tutorName: '',
+            tutorImage: '',
+            position: '',
+            company: '',
+            rating: 4.5,
+            reviewCount: 0
+        });
+
+        setShowAddCourseModal(false);
+        alert('Course berhasil ditambahkan');
+    };
+
+    const handleEditCourse = (course) => {
+        // Set data course yang akan diedit
+        setEditCourse({
+            id: course.id,
+            title: course.title,
+            description: course.description,
+            category: course.category,
+            price: course.price.replace('K', ''), // Remove 'K' for editing
+            courseImage: course.courseImage,
+            tutorName: course.tutorName,
+            tutorImage: course.tutorImage,
+            position: course.position,
+            company: course.company,
+            rating: course.rating,
+            reviewCount: course.reviewCount
+        });
+        setShowEditCourseModal(true);
+    };
+
+    const handleUpdateCourse = () => {
+        if (!editCourse.title || !editCourse.description || !editCourse.category || !editCourse.price) {
+            alert('Mohon lengkapi semua field yang wajib');
+            return;
+        }
+
+        const updatedCourse = {
+            ...editCourse,
+            price: editCourse.price + 'K',
+            reviewCount: parseInt(editCourse.reviewCount) || 0,
+            rating: parseFloat(editCourse.rating) || 4.5
+        };
+
+        const updatedCourses = courses.map(course => 
+            course.id === editCourse.id ? updatedCourse : course
+        );
+
+        setCourses(updatedCourses);
+        localStorage.setItem('courses', JSON.stringify(updatedCourses));
+
+        // Reset form
+        setEditCourse({
+            id: '',
+            title: '',
+            description: '',
+            category: '',
+            price: '',
+            courseImage: '',
+            tutorName: '',
+            tutorImage: '',
+            position: '',
+            company: '',
+            rating: 4.5,
+            reviewCount: 0
+        });
+
+        setShowEditCourseModal(false);
+        alert('Course berhasil diupdate');
+    };
+
+    const handleDeleteCourse = (courseId) => {
+        setDeleteTarget({ type: 'course', id: courseId });
+        setShowDeleteModal(true);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setNewCourse(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleEditInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditCourse(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleLogout = () => {
+        const confirmLogout = window.confirm("Apakah Anda yakin ingin keluar?");
+        if (confirmLogout) {
+            // Clear localStorage
+            localStorage.removeItem('user');
+            localStorage.removeItem('isLoggedIn');
+            
+            // Navigate to home page
+            navigate('/');
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-100">
+            {/* Header - Responsive */}
+            <header className="bg-white shadow-sm border-b">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center py-4">
+                        <div className="flex items-center">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                        </div>
+                        
+                        {/* Desktop Navigation */}
+                        <div className="hidden md:flex items-center space-x-4">
+                            <span className="text-sm text-gray-600">Welcome, Admin</span>
+                            <button
+                                onClick={handleLogout}
+                                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                            >
+                                Logout
+                            </button>
+                        </div>
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={() => setShowMobileMenu(!showMobileMenu)}
+                            className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Mobile Navigation Menu */}
+                    {showMobileMenu && (
+                        <div className="md:hidden pb-4 border-t border-gray-200">
+                            <div className="pt-4 space-y-2">
+                                <span className="block text-sm text-gray-600 px-3">Welcome, Admin</span>
+                                <button
+                                    onClick={handleLogout}
+                                    className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </header>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+                {/* Navigation Tabs - Responsive */}
+                <div className="mb-6 lg:mb-8">
+                    <nav className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8 overflow-x-auto">
+                        <button
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`pb-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                activeTab === 'dashboard'
+                                    ? 'border-green-500 text-green-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Dashboard
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('users')}
+                            className={`pb-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                activeTab === 'users'
+                                    ? 'border-green-500 text-green-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            User Management
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('courses')}
+                            className={`pb-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                activeTab === 'courses'
+                                    ? 'border-green-500 text-green-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Course Management
+                        </button>
+                    </nav>
+                </div>
+
+                {/* Dashboard Tab */}
+                {activeTab === 'dashboard' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                        <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+                            <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">Total Users</h3>
+                            <p className="text-2xl lg:text-3xl font-bold text-green-600">{users.length}</p>
+                            <p className="text-xs lg:text-sm text-gray-500 mt-1">Registered accounts</p>
+                        </div>
+                        <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+                            <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">Total Courses</h3>
+                            <p className="text-2xl lg:text-3xl font-bold text-blue-600">{courses.length}</p>
+                            <p className="text-xs lg:text-sm text-gray-500 mt-1">Available courses</p>
+                        </div>
+                        <div className="bg-white p-4 lg:p-6 rounded-lg shadow sm:col-span-2 lg:col-span-1">
+                            <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">Categories</h3>
+                            <p className="text-2xl lg:text-3xl font-bold text-purple-600">{CATEGORIES.length}</p>
+                            <p className="text-xs lg:text-sm text-gray-500 mt-1">Course categories</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Users Tab */}
+                {activeTab === 'users' && (
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                            <h3 className="text-base lg:text-lg leading-6 font-medium text-gray-900">
+                                Registered Users ({users.length})
+                            </h3>
+                        </div>
+                        <ul className="divide-y divide-gray-200">
+                            {users.map((user) => (
+                                <li key={user.id} className="px-4 py-4 sm:px-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center">
+                                                <div className="flex-shrink-0">
+                                                    <div className="h-8 w-8 lg:h-10 lg:w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                                        <span className="text-xs lg:text-sm font-medium text-green-800">
+                                                            {user.fullName?.charAt(0) || 'U'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="ml-4 flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                                        {user.fullName}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                                    <div className="mt-1 flex flex-wrap items-center text-xs text-gray-400 gap-1">
+                                                        <span>{user.gender}</span>
+                                                        <span>•</span>
+                                                        <span className="break-all">{user.phoneNumber}</span>
+                                                        {user.createdAt && (
+                                                            <>
+                                                                <span>•</span>
+                                                                <span>Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                            <button
+                                                onClick={() => handleResetPassword(user.id)}
+                                                className="bg-yellow-500 text-white px-3 py-2 rounded text-sm hover:bg-yellow-600 transition-colors text-center"
+                                            >
+                                                Reset Password
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                className="bg-red-500 text-white px-3 py-2 rounded text-sm hover:bg-red-600 transition-colors text-center"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        {users.length === 0 && (
+                            <div className="text-center py-12">
+                                <p className="text-gray-500">No users registered yet.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Courses Tab */}
+                {activeTab === 'courses' && (
+                    <div>
+                        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+                            <h3 className="text-base lg:text-lg font-medium text-gray-900">
+                                Courses ({courses.length})
+                            </h3>
+                            <button
+                                onClick={() => setShowAddCourseModal(true)}
+                                className="w-full sm:w-auto bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors text-center"
+                            >
+                                Add New Course
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                            {courses.map((course) => (
+                                <div key={course.id} className="bg-white rounded-lg shadow overflow-hidden">
+                                    {/* Course Image */}
+                                    <div className="h-40 lg:h-48 bg-gray-200 overflow-hidden">
+                                        {course.courseImage ? (
+                                            <img 
+                                                src={course.courseImage} 
+                                                alt={course.title}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div 
+                                            className="w-full h-full bg-blue-100 flex items-center justify-center" 
+                                            style={{ display: course.courseImage ? 'none' : 'flex' }}
+                                        >
+                                            <span className="text-blue-600 text-sm text-center px-2">
+                                                {course.courseImage ? course.courseImage.split('/').pop() : 'No Image'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="p-4">
+                                        <h4 className="text-base lg:text-lg font-medium text-gray-900 mb-2 line-clamp-2">
+                                            {course.title}
+                                        </h4>
+                                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                            {course.description}
+                                        </p>
+                                        
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {course.category}
+                                            </span>
+                                            <span className="text-lg font-semibold text-green-600">Rp {course.price}</span>
+                                        </div>
+                                        
+                                        {/* Tutor Info with Image */}
+                                        {course.tutorName && (
+                                            <div className="flex items-center mb-3 space-x-2">
+                                                {course.tutorImage ? (
+                                                    <img 
+                                                        src={course.tutorImage} 
+                                                        alt={course.tutorName}
+                                                        className="w-8 h-8 rounded-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            e.target.nextSibling.style.display = 'flex';
+                                                        }}
+                                                    />
+                                                ) : null}
+                                                <div 
+                                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center" 
+                                                    style={{ display: course.tutorImage ? 'none' : 'flex' }}
+                                                >
+                                                    <span className="text-xs text-gray-500">
+                                                        {course.tutorName?.charAt(0) || 'T'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                                        {course.tutorName}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 truncate">
+                                                        {course.position} {course.company && `di ${course.company}`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                                            <div className="flex items-center">
+                                                <span className="text-yellow-400">★</span>
+                                                <span className="ml-1">{course.rating} ({course.reviewCount})</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <button
+                                                onClick={() => handleEditCourse(course)}
+                                                className="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
+                                            >
+                                                Edit Course
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteCourse(course.id)}
+                                                className="w-full bg-red-500 text-white px-3 py-2 rounded text-sm hover:bg-red-600 transition-colors"
+                                            >
+                                                Delete Course
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {courses.length === 0 && (
+                            <div className="text-center py-12">
+                                <p className="text-gray-500">No courses added yet.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Delete</h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                            Are you sure you want to delete this {deleteTarget?.type}? This action cannot be undone.
+                        </p>
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Password Modal */}
+            {editingUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-6 rounded-lg max-w-sm w-full">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Reset Password</h3>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                New Password
+                            </label>
+                            <input
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                placeholder="Enter new password (min 6 characters)"
+                            />
+                        </div>
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                            <button
+                                onClick={() => setEditingUser(null)}
+                                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmResetPassword}
+                                className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Course Modal */}
+            {showAddCourseModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-4 lg:p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-6">Add New Course</h3>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Course Title *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        value={newCourse.title}
+                                        onChange={handleInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="Enter course title"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Description *
+                                    </label>
+                                    <textarea
+                                        name="description"
+                                        value={newCourse.description}
+                                        onChange={handleInputChange}
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="Enter course description"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Category *
+                                        </label>
+                                        <select
+                                            name="category"
+                                            value={newCourse.category}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        >
+                                            <option value="">Select Category</option>
+                                            {CATEGORIES.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Price (without K) *
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="price"
+                                            value={newCourse.price}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., 300"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Course Image
+                                    </label>
+                                    <select
+                                        name="courseImage"
+                                        value={newCourse.courseImage}
+                                        onChange={handleInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    >
+                                        <option value="">Select Course Image</option>
+                                        {CARD_IMAGES.map((img, index) => (
+                                            <option key={img} value={img}>Card {index + 1}</option>
+                                        ))}
+                                    </select>
+                                    {newCourse.courseImage && (
+                                        <div className="mt-2">
+                                            <img 
+                                                src={newCourse.courseImage} 
+                                                alt="Preview"
+                                                className="w-20 h-12 object-cover rounded border"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Tutor Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="tutorName"
+                                            value={newCourse.tutorName}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="Enter tutor name"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Tutor Image
+                                        </label>
+                                        <select
+                                            name="tutorImage"
+                                            value={newCourse.tutorImage}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        >
+                                            <option value="">Select Tutor Image</option>
+                                            {TUTOR_IMAGES.map((img, index) => (
+                                                <option key={img} value={img}>Tutor {index + 1}</option>
+                                            ))}
+                                        </select>
+                                        {newCourse.tutorImage && (
+                                            <div className="mt-2">
+                                                <img 
+                                                    src={newCourse.tutorImage} 
+                                                    alt="Preview"
+                                                    className="w-10 h-10 object-cover rounded-full border"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Position
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="position"
+                                            value={newCourse.position}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., Senior Developer"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Company
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="company"
+                                            value={newCourse.company}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., Google"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Rating (1-5)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min="1"
+                                            max="5"
+                                            name="rating"
+                                            value={newCourse.rating}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Review Count
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            name="reviewCount"
+                                            value={newCourse.reviewCount}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., 126"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 mt-6">
+                                <button
+                                    onClick={() => setShowAddCourseModal(false)}
+                                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAddCourse}
+                                    className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                                >
+                                    Add Course
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Course Modal */}
+            {showEditCourseModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-4 lg:p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-6">Edit Course</h3>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Course Title *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        value={editCourse.title}
+                                        onChange={handleEditInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="Enter course title"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Description *
+                                    </label>
+                                    <textarea
+                                        name="description"
+                                        value={editCourse.description}
+                                        onChange={handleEditInputChange}
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="Enter course description"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Category *
+                                        </label>
+                                        <select
+                                            name="category"
+                                            value={editCourse.category}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        >
+                                            <option value="">Select Category</option>
+                                            {CATEGORIES.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Price (without K) *
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="price"
+                                            value={editCourse.price}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., 300"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Course Image
+                                    </label>
+                                    <select
+                                        name="courseImage"
+                                        value={editCourse.courseImage}
+                                        onChange={handleEditInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    >
+                                        <option value="">Select Course Image</option>
+                                        {CARD_IMAGES.map((img, index) => (
+                                            <option key={img} value={img}>Card {index + 1}</option>
+                                        ))}
+                                    </select>
+                                    {editCourse.courseImage && (
+                                        <div className="mt-2">
+                                            <img 
+                                                src={editCourse.courseImage} 
+                                                alt="Preview"
+                                                className="w-20 h-12 object-cover rounded border"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Tutor Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="tutorName"
+                                            value={editCourse.tutorName}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="Enter tutor name"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Tutor Image
+                                        </label>
+                                        <select
+                                            name="tutorImage"
+                                            value={editCourse.tutorImage}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        >
+                                            <option value="">Select Tutor Image</option>
+                                            {TUTOR_IMAGES.map((img, index) => (
+                                                <option key={img} value={img}>Tutor {index + 1}</option>
+                                            ))}
+                                        </select>
+                                        {editCourse.tutorImage && (
+                                            <div className="mt-2">
+                                                <img 
+                                                    src={editCourse.tutorImage} 
+                                                    alt="Preview"
+                                                    className="w-10 h-10 object-cover rounded-full border"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Position
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="position"
+                                            value={editCourse.position}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., Senior Developer"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Company
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="company"
+                                            value={editCourse.company}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., Google"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Rating (1-5)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min="1"
+                                            max="5"
+                                            name="rating"
+                                            value={editCourse.rating}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Review Count
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            name="reviewCount"
+                                            value={editCourse.reviewCount}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            placeholder="e.g., 126"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 mt-6">
+                                <button
+                                    onClick={() => setShowEditCourseModal(false)}
+                                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpdateCourse}
+                                    className="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                                >
+                                    Update Course
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
