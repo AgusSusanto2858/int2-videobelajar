@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Logo from '../../assets/images/logo.png'
-import Avatar from '../../assets/images/avatar.png'
 
 export default function Navbar({ isLoggedIn = false, user = null, onGuestLogin, onLogout }) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -37,7 +35,7 @@ export default function Navbar({ isLoggedIn = false, user = null, onGuestLogin, 
                 <div className="container mx-auto max-w-[1200px] px-4 md:px-6 lg:px-10 py-4 flex justify-between items-center">
                     {/* Logo */}
                     <Link to="/">
-                        <img src={Logo} alt="Logo" className="h-6 md:h-8" />
+                        <img src="/images/logo.png" alt="Logo" className="h-6 md:h-8" />
                     </Link>
                     
                     {/* Desktop Navigation */}
@@ -50,10 +48,13 @@ export default function Navbar({ isLoggedIn = false, user = null, onGuestLogin, 
                                 </a>
                                 <div className="relative">
                                     <img 
-                                        src={Avatar} 
+                                        src="/images/avatar.png" 
                                         alt="User Avatar"
                                         className="h-8 w-8 md:h-12 md:w-12 rounded-md cursor-pointer" 
                                         onClick={toggleDropdown}
+                                        onError={(e) => {
+                                            e.target.src = '/images/placeholder.png';
+                                        }}
                                     />
                                     {isDropdownOpen && (
                                         <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
@@ -123,9 +124,12 @@ export default function Navbar({ isLoggedIn = false, user = null, onGuestLogin, 
                                 <>
                                     <div className="flex items-center space-x-3 pb-4 border-b border-gray-100">
                                         <img 
-                                            src={Avatar} 
+                                            src="/images/avatar.png" 
                                             alt="User Avatar"
-                                            className="h-10 w-10 rounded-md" 
+                                            className="h-10 w-10 rounded-md"
+                                            onError={(e) => {
+                                                e.target.src = '/images/placeholder.png';
+                                            }}
                                         />
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">

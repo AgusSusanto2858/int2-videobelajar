@@ -1,12 +1,10 @@
-import backgroundImage from '../../assets/images/newsletter.jpg';
-
 export default function Newsletter () {
     return (
         <div className="px-4 sm:px-8">
             <div 
             className="flex justify-center items-center w-full h-96 rounded-xl mx-auto max-w-[1170px] mb-16"
             style={{ 
-                backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(${backgroundImage})`, 
+                backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/images/newsletter.jpg')`, 
                 backgroundSize: 'cover', 
                 backgroundPosition: 'center'
             }}>

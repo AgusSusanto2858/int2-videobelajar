@@ -1,30 +1,10 @@
-import Card1 from '../assets/cards/card1.png'
-import Card2 from '../assets/cards/card2.png'
-import Card3 from '../assets/cards/card3.png'
-import Card4 from '../assets/cards/card4.png'
-import Card5 from '../assets/cards/card5.png'
-import Card6 from '../assets/cards/card6.png'
-import Card7 from '../assets/cards/card7.png'
-import Card8 from '../assets/cards/card8.png'
-import Card9 from '../assets/cards/card9.png'
-import Tutor1 from '../assets/tutors/tutor-card1.png'
-import Tutor2 from '../assets/tutors/tutor-card2.png'
-import Tutor3 from '../assets/tutors/tutor-card3.png'
-import Tutor4 from '../assets/tutors/tutor-card4.png'
-import Tutor5 from '../assets/tutors/tutor-card5.png'
-import Tutor6 from '../assets/tutors/tutor-card6.png'
-import Tutor7 from '../assets/tutors/tutor-card7.png'
-import Tutor8 from '../assets/tutors/tutor-card8.png'
-import Tutor9 from '../assets/tutors/tutor-card9.png'
-
-// Default courses data
 const defaultCoursesData = [
     {
         id: 1,
-        courseImage: Card1,
+        courseImage: '/images/cards/card1.png',
         title: "Big 4 Auditor Financial Analyst",
         description: "Mulai transformasi dengan instruktur profesional, harga yang terjangkau, dan sistem pembelajaran yang mudah dipahami.",
-        tutorImage: Tutor1,
+        tutorImage: '/images/tutors/tutor-card1.png',
         tutorName: "Jenna Ortega",
         position: "Senior Accountant",
         company: "Gojek",
@@ -35,10 +15,10 @@ const defaultCoursesData = [
     },
     {
         id: 2,
-        courseImage: Card2,
+        courseImage: '/images/cards/card2.png',
         title: "Digital Marketing Strategy",
         description: "Pelajari strategi pemasaran digital yang efektif untuk meningkatkan brand awareness dan konversi.",
-        tutorImage: Tutor2,
+        tutorImage: '/images/tutors/tutor-card2.png',
         tutorName: "Sarah Johnson",
         position: "Marketing Director",
         company: "Tokopedia",
@@ -49,10 +29,10 @@ const defaultCoursesData = [
     },
     {
         id: 3,
-        courseImage: Card3,
+        courseImage: '/images/cards/card3.png',
         title: "UI/UX Design Fundamentals",
         description: "Kuasai dasar-dasar desain UI/UX untuk menciptakan pengalaman pengguna yang luar biasa.",
-        tutorImage: Tutor3,
+        tutorImage: '/images/tutors/tutor-card3.png',
         tutorName: "Michael Chen",
         position: "Lead Designer",
         company: "Grab",
@@ -63,10 +43,10 @@ const defaultCoursesData = [
     },
     {
         id: 4,
-        courseImage: Card4,
+        courseImage: '/images/cards/card4.png',
         title: "Personal Branding Mastery",
         description: "Bangun personal branding yang kuat untuk mengembangkan karir dan bisnis Anda.",
-        tutorImage: Tutor4,
+        tutorImage: '/images/tutors/tutor-card4.png',
         tutorName: "Lisa Wong",
         position: "Brand Consultant",
         company: "Freelancer",
@@ -77,10 +57,10 @@ const defaultCoursesData = [
     },
     {
         id: 5,
-        courseImage: Card5,
+        courseImage: '/images/cards/card5.png',
         title: "Business Analytics with Excel",
         description: "Analisis data bisnis menggunakan Excel untuk pengambilan keputusan yang lebih baik.",
-        tutorImage: Tutor5,
+        tutorImage: '/images/tutors/tutor-card5.png',
         tutorName: "David Park",
         position: "Data Analyst",
         company: "Bukalapak",
@@ -91,10 +71,10 @@ const defaultCoursesData = [
     },
     {
         id: 6,
-        courseImage: Card6,
+        courseImage: '/images/cards/card6.png',
         title: "Social Media Content Creation",
         description: "Ciptakan konten media sosial yang engaging dan viral untuk berbagai platform.",
-        tutorImage: Tutor6,
+        tutorImage: '/images/tutors/tutor-card6.png',
         tutorName: "Amanda Rivera",
         position: "Content Strategist",
         company: "TikTok",
@@ -105,10 +85,10 @@ const defaultCoursesData = [
     },
     {
         id: 7,
-        courseImage: Card7,
+        courseImage: '/images/cards/card7.png',
         title: "Graphic Design Essentials",
         description: "Pelajari teknik desain grafis dari dasar hingga mahir menggunakan tools profesional.",
-        tutorImage: Tutor7,
+        tutorImage: '/images/tutors/tutor-card7.png',
         tutorName: "Robert Kim",
         position: "Creative Director",
         company: "Adobe",
@@ -119,10 +99,10 @@ const defaultCoursesData = [
     },
     {
         id: 8,
-        courseImage: Card8,
+        courseImage: '/images/cards/card8.png',
         title: "Leadership & Team Management",
         description: "Kembangkan kemampuan kepemimpinan dan manajemen tim untuk hasil yang optimal.",
-        tutorImage: Tutor8,
+        tutorImage: '/images/tutors/tutor-card8.png',
         tutorName: "Jennifer Taylor",
         position: "HR Director",
         company: "Google",
@@ -133,10 +113,10 @@ const defaultCoursesData = [
     },
     {
         id: 9,
-        courseImage: Card9,
+        courseImage: '/images/cards/card9.png',
         title: "E-commerce Business Setup",
         description: "Panduan lengkap membangun bisnis e-commerce dari nol hingga sukses.",
-        tutorImage: Tutor9,
+        tutorImage: '/images/tutors/tutor-card9.png',
         tutorName: "Kevin Zhang",
         position: "E-commerce Manager",
         company: "Shopee",
@@ -147,8 +127,19 @@ const defaultCoursesData = [
     }
 ];
 
+// Cache untuk menghindari multiple localStorage reads
+let coursesCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 1000; // 1 second cache
+
 // Function to get all courses (combining default + localStorage)
 const getAllCoursesData = () => {
+    // Use cache if still valid
+    const now = Date.now();
+    if (coursesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+        return coursesCache;
+    }
+
     try {
         // Get courses from localStorage
         const storedCourses = JSON.parse(localStorage.getItem('courses') || '[]');
@@ -156,15 +147,25 @@ const getAllCoursesData = () => {
         // If no stored courses, initialize with default data
         if (storedCourses.length === 0) {
             localStorage.setItem('courses', JSON.stringify(defaultCoursesData));
-            return defaultCoursesData;
+            coursesCache = defaultCoursesData;
+        } else {
+            coursesCache = storedCourses;
         }
         
-        // Return stored courses (which may include admin-added courses)
-        return storedCourses;
+        cacheTimestamp = now;
+        return coursesCache;
     } catch (error) {
         console.error('Error loading courses from localStorage:', error);
+        coursesCache = defaultCoursesData;
+        cacheTimestamp = now;
         return defaultCoursesData;
     }
+};
+
+// Clear cache when courses are updated
+const clearCache = () => {
+    coursesCache = null;
+    cacheTimestamp = 0;
 };
 
 // Export the dynamic courses data
@@ -194,7 +195,20 @@ export const categories = [
     'Bisnis'
 ];
 
-// Function to refresh courses data (call this when courses are updated)
+// Function to refresh courses data and clear cache
 export const refreshCoursesData = () => {
+    clearCache();
     return getAllCoursesData();
+};
+
+// Function to update courses (for admin use)
+export const updateCoursesData = (newCourses) => {
+    try {
+        localStorage.setItem('courses', JSON.stringify(newCourses));
+        clearCache();
+        return true;
+    } catch (error) {
+        console.error('Error updating courses:', error);
+        return false;
+    }
 };
